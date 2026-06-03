@@ -1,0 +1,32 @@
+
+# Dependencies
+node_modules/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+
+# Database (live data)
+database/wtms.db
+database/wtms.db-shm
+database/wtms.db-wal
+
+# Build output
+dist/
+
+# Uploads (user files)
+uploads/
+
+# Logs
+*.log
+server.log
+error.log
+
+# CorelDraw binary files
+*.cdr
+
+# Claude AI memory
+.claude/

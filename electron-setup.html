@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'">
+<title>WTMS – First Time Setup</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #1f2335;
+    color: #c0caf5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    padding: 32px;
+    user-select: none;
+  }
+  h1 { font-size: 22px; font-weight: 600; color: #7aa2f7; margin-bottom: 6px; }
+  .subtitle { font-size: 13px; color: #565f89; margin-bottom: 28px; text-align: center; }
+  .options { width: 100%; display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+  .option {
+    display: flex; align-items: flex-start; gap: 12px;
+    background: #24283b; border: 2px solid transparent;
+    border-radius: 8px; padding: 14px 16px; cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .option:hover { border-color: #3d59a1; }
+  .option.selected { border-color: #7aa2f7; background: #2a2f45; }
+  .option input[type=radio] { margin-top: 2px; accent-color: #7aa2f7; flex-shrink: 0; }
+  .option-label { font-size: 14px; font-weight: 600; color: #c0caf5; }
+  .option-desc { font-size: 12px; color: #565f89; margin-top: 3px; }
+  #client-url-section {
+    width: 100%; display: none; margin-bottom: 20px;
+  }
+  #client-url-section label { font-size: 13px; color: #9aa5ce; display: block; margin-bottom: 6px; }
+  #server-url {
+    width: 100%; padding: 10px 12px;
+    background: #24283b; border: 1px solid #3d59a1;
+    border-radius: 6px; color: #c0caf5; font-size: 14px;
+    outline: none;
+  }
+  #server-url:focus { border-color: #7aa2f7; }
+  #server-url::placeholder { color: #414868; }
+  .error { color: #f7768e; font-size: 12px; margin-top: 6px; display: none; }
+  button {
+    width: 100%; padding: 12px;
+    background: #7aa2f7; color: #1a1b26;
+    border: none; border-radius: 8px;
+    font-size: 15px; font-weight: 700; cursor: pointer;
+    transition: background 0.15s;
+  }
+  button:hover { background: #89b4fa; }
+</style>
+</head>
+<body>
+<h1>WTMS Setup</h1>
+<p class="subtitle">How is this PC connected to WTMS?</p>
+
+<div class="options">
+  <label class="option selected" id="opt-server">
+    <input type="radio" name="mode" value="server" checked>
+    <div>
+      <div class="option-label">This is the Server PC</div>
+      <div class="option-desc">This PC hosts all data. Other PCs on the network will connect to it.</div>
+    </div>
+  </label>
+  <label class="option" id="opt-client">
+    <input type="radio" name="mode" value="client">
+    <div>
+      <div class="option-label">Connect to an existing Server</div>
+      <div class="option-desc">This PC will use the WTMS data from another PC on this network.</div>
+    </div>
+  </label>
+</div>
+
+<div id="client-url-section">
+  <label for="server-url">Server PC address (e.g. http://192.168.1.100:8080)</label>
+  <input type="text" id="server-url" placeholder="http://192.168.29.251:8080" value="http://192.168.29.251:8080" spellcheck="false">
+  <div class="error" id="url-error">Please enter a valid server URL.</div>
+</div>
+
+<button id="continue-btn">Continue</button>
+
+<script>
+const { ipcRenderer } = require('electron');
+
+const optServer = document.getElementById('opt-server');
+const optClient = document.getElementById('opt-client');
+const clientSection = document.getElementById('client-url-section');
+const urlInput = document.getElementById('server-url');
+const urlError = document.getElementById('url-error');
+
+document.querySelectorAll('input[name=mode]').forEach(radio => {
+  radio.addEventListener('change', () => {
+    const isClient = radio.value === 'client';
+    optServer.classList.toggle('selected', !isClient);
+    optClient.classList.toggle('selected', isClient);
+    clientSection.style.display = isClient ? 'block' : 'none';
+    urlError.style.display = 'none';
+  });
+});
+
+document.getElementById('continue-btn').addEventListener('click', () => {
+  const mode = document.querySelector('input[name=mode]:checked').value;
+  if (mode === 'client') {
+    const url = urlInput.value.trim();
+    if (!url.match(/^https?:\/\/.+/)) {
+      urlError.style.display = 'block';
+      urlInput.focus();
+      return;
+    }
+    ipcRenderer.send('wtms-setup-done', { mode: 'client', serverUrl: url });
+  } else {
+    ipcRenderer.send('wtms-setup-done', { mode: 'server' });
+  }
+});
+</script>
+</body>
+</html>

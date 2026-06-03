@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WTMS — Client Portal</title>
+<link rel="icon" type="image/png" href="/images/only.png">
+<style>
+/* ── Tokyo Night palette ── */
+:root {
+    --bg:       #1a1a1a;
+    --bg2:      #222222;
+    --bg3:      #2a2a2a;
+    --border:   #333333;
+    --fg:       #c0caf5;
+    --fg-muted: #565f89;
+    --blue:     #7aa2f7;
+    --purple:   #bb9af7;
+    --cyan:     #73daca;
+    --green:    #9ece6a;
+    --orange:   #ff9e64;
+    --red:      #f7768e;
+    --yellow:   #e0af68;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+    width: 240px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+.sidebar-logo {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid var(--border);
+}
+.sidebar-logo img { height: 36px; }
+.sidebar-logo .tagline {
+    font-size: 11px;
+    color: var(--fg-muted);
+    margin-top: 4px;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+}
+
+.sidebar-user {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--blue), var(--purple));
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 15px; color: #fff; flex-shrink: 0;
+}
+.user-info .name { font-size: 13px; font-weight: 600; color: var(--fg); }
+.user-info .role-badge {
+    font-size: 10px; text-transform: uppercase; letter-spacing: .5px;
+    color: var(--cyan); background: rgba(115,218,202,.12);
+    padding: 2px 7px; border-radius: 20px; display: inline-block; margin-top: 2px;
+}
+
+.sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+.nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px; cursor: pointer; font-size: 14px;
+    color: var(--fg-muted); border-radius: 0; transition: all .15s;
+    border-left: 3px solid transparent;
+}
+.nav-item:hover { background: var(--bg3); color: var(--fg); }
+.nav-item.active { background: rgba(122,162,247,.1); color: var(--blue); border-left-color: var(--blue); }
+.nav-item svg { width: 17px; height: 17px; flex-shrink: 0; }
+
+.sidebar-footer {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+}
+.btn-logout {
+    width: 100%; padding: 9px; background: rgba(247,118,142,.1);
+    color: var(--red); border: 1px solid rgba(247,118,142,.25);
+    border-radius: 8px; font-size: 13px; cursor: pointer;
+    transition: background .15s;
+}
+.btn-logout:hover { background: rgba(247,118,142,.2); }
+
+/* ── Main content ── */
+.main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.topbar {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+.topbar h1 { font-size: 18px; font-weight: 600; color: var(--fg); }
+.topbar .subtitle { font-size: 12px; color: var(--fg-muted); margin-top: 2px; }
+
+.content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 28px;
+}
+
+/* ── Stat cards ── */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+}
+.stat-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-left: 4px solid var(--border);
+}
+.stat-icon {
+    width: 44px; height: 44px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.stat-icon svg { width: 22px; height: 22px; }
+.stat-label { font-size: 12px; color: var(--fg-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .4px; }
+.stat-value { font-size: 26px; font-weight: 700; color: var(--fg); line-height: 1; }
+
+/* ── Section headings ── */
+.section-heading {
+    font-size: 16px; font-weight: 600; color: var(--fg);
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+}
+.section-heading svg { width: 18px; height: 18px; color: var(--blue); }
+
+/* ── Gantt timeline ── */
+.gantt-wrap {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 32px;
+    overflow-x: auto;
+}
+.gantt-header {
+    display: flex;
+    margin-bottom: 12px;
+    padding-left: 200px;
+}
+.gantt-month {
+    flex: 1;
+    font-size: 11px;
+    color: var(--fg-muted);
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+}
+.gantt-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    min-height: 34px;
+}
+.gantt-label {
+    width: 200px;
+    flex-shrink: 0;
+    padding-right: 12px;
+}
+.gantt-label .p-name { font-size: 13px; font-weight: 500; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gantt-label .p-code { font-size: 11px; color: var(--fg-muted); }
+.gantt-track {
+    flex: 1;
+    position: relative;
+    height: 28px;
+    background: var(--bg3);
+    border-radius: 6px;
+    overflow: hidden;
+}
+.gantt-bar {
+    position: absolute;
+    height: 100%;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    transition: opacity .2s;
+}
+.gantt-bar:hover { opacity: .85; }
+.gantt-today {
+    position: absolute;
+    width: 2px;
+    height: 100%;
+    background: var(--red);
+    top: 0;
+    z-index: 10;
+}
+.gantt-today-label {
+    position: absolute;
+    top: -18px;
+    font-size: 10px;
+    color: var(--red);
+    transform: translateX(-50%);
+}
+
+/* Status colors */
+.s-not_started   { background: var(--fg-muted); }
+.s-in_progress   { background: var(--blue); }
+.s-on_hold       { background: var(--orange); }
+.s-completed     { background: var(--green); }
+.s-archived      { background: var(--border); }
+.s-client_review { background: var(--purple); }
+
+/* ── Project cards ── */
+.project-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 16px;
+    overflow: hidden;
+}
+.project-card-header {
+    padding: 18px 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: background .15s;
+    user-select: none;
+}
+.project-card-header:hover { background: var(--bg3); }
+.project-card-header .expand-icon {
+    width: 20px; height: 20px; flex-shrink: 0;
+    color: var(--fg-muted); transition: transform .2s;
+}
+.project-card.open .expand-icon { transform: rotate(90deg); }
+
+.code-badge {
+    background: rgba(122,162,247,.15);
+    color: var(--blue);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-family: monospace;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.project-title { flex: 1; font-size: 15px; font-weight: 600; color: var(--fg); min-width: 0; }
+.project-client { font-size: 12px; color: var(--fg-muted); margin-top: 1px; }
+
+.status-pill {
+    font-size: 11px; font-weight: 600; padding: 3px 10px;
+    border-radius: 20px; text-transform: capitalize; white-space: nowrap; flex-shrink: 0;
+}
+.sp-not_started   { background: rgba(86,95,137,.2); color: var(--fg-muted); }
+.sp-in_progress   { background: rgba(122,162,247,.15); color: var(--blue); }
+.sp-on_hold       { background: rgba(255,158,100,.15); color: var(--orange); }
+.sp-completed     { background: rgba(158,206,106,.15); color: var(--green); }
+.sp-archived      { background: rgba(45,49,73,.4); color: var(--fg-muted); }
+.sp-client_review { background: rgba(187,154,247,.2); color: var(--purple); border: 1px solid rgba(187,154,247,.35); animation: pulse-review 2s infinite; }
+
+@keyframes pulse-review {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: .6; }
+}
+
+.review-banner {
+    background: rgba(187,154,247,.1);
+    border: 1px solid rgba(187,154,247,.3);
+    border-radius: 10px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    color: var(--purple);
+    font-size: 14px;
+    font-weight: 500;
+}
+.review-banner svg { flex-shrink: 0; width: 20px; height: 20px; }
+
+.cat-badge { font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 8px; }
+.cat-pr { background: rgba(122,162,247,.15); color: var(--blue); }
+.cat-cr { background: rgba(255,158,100,.15); color: var(--orange); }
+
+.priority-pill {
+    font-size: 11px; font-weight: 600; padding: 3px 8px;
+    border-radius: 6px; text-transform: capitalize; white-space: nowrap; flex-shrink: 0;
+}
+.pp-low      { background: rgba(115,218,202,.12); color: var(--cyan); }
+.pp-medium   { background: rgba(122,162,247,.12); color: var(--blue); }
+.pp-high     { background: rgba(255,158,100,.12); color: var(--orange); }
+.pp-critical { background: rgba(247,118,142,.12); color: var(--red); }
+
+.progress-wrap {
+    display: flex; align-items: center; gap: 8px; flex-shrink: 0; width: 120px;
+}
+.progress-track {
+    flex: 1; height: 6px; background: var(--bg3);
+    border-radius: 3px; overflow: hidden;
+}
+.progress-fill { height: 100%; border-radius: 3px; background: var(--green); transition: width .3s; }
+.progress-pct { font-size: 12px; font-weight: 600; color: var(--fg); min-width: 34px; text-align: right; }
+
+.meta-item { font-size: 12px; color: var(--fg-muted); white-space: nowrap; flex-shrink: 0; }
+.meta-item strong { color: var(--fg); }
+
+/* ── Task table ── */
+.project-tasks {
+    display: none;
+    padding: 0 20px 20px;
+}
+.project-card.open .project-tasks { display: block; }
+
+.task-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+.task-table th {
+    background: var(--bg3);
+    color: var(--fg-muted);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    padding: 9px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+.task-table th:first-child { border-radius: 8px 0 0 0; }
+.task-table th:last-child  { border-radius: 0 8px 0 0; }
+.task-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--fg);
+    vertical-align: middle;
+}
+.task-table tr:last-child td { border-bottom: none; }
+.task-table tr:hover td { background: rgba(255,255,255,.02); }
+
+.task-status {
+    font-size: 11px; font-weight: 600; padding: 3px 8px;
+    border-radius: 20px; white-space: nowrap;
+}
+.ts-pending            { background: rgba(86,95,137,.2);     color: var(--fg-muted); }
+.ts-in_progress        { background: rgba(122,162,247,.15);  color: var(--blue); }
+.ts-submitted          { background: rgba(187,154,247,.15);  color: var(--purple); }
+.ts-under_review       { background: rgba(224,175,104,.15);  color: var(--yellow); }
+.ts-revision_requested { background: rgba(255,158,100,.15);  color: var(--orange); }
+.ts-completed          { background: rgba(158,206,106,.15);  color: var(--green); }
+.ts-cancelled          { background: rgba(247,118,142,.12);  color: var(--red); }
+
+.task-priority {
+    font-size: 11px; font-weight: 600; padding: 2px 7px;
+    border-radius: 5px; text-transform: capitalize;
+}
+
+.hours-badge {
+    font-family: monospace; font-size: 12px; font-weight: 600;
+    color: var(--cyan);
+}
+.iteration-badge {
+    font-size: 11px; font-weight: 700; width: 22px; height: 22px;
+    border-radius: 50%; background: rgba(122,162,247,.15); color: var(--blue);
+    display: inline-flex; align-items: center; justify-content: center;
+}
+
+/* ── Loading / empty ── */
+.loading {
+    color: var(--fg-muted); font-size: 14px; text-align: center; padding: 40px;
+}
+.empty-state {
+    text-align: center; padding: 48px 20px;
+    color: var(--fg-muted); font-size: 14px;
+}
+.empty-state svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: .3; display: block; margin-inline: auto; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .sidebar { width: 200px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <img src="/images/Logo_white.png" alt="Lucid The Artistry" onerror="this.style.display='none'">
+        <div class="tagline">Client Portal</div>
+    </div>
+
+    <div class="sidebar-user">
+        <div class="avatar" id="sidebarAvatar">C</div>
+        <div class="user-info">
+            <div class="name" id="sidebarName">Loading...</div>
+            <span class="role-badge">Client</span>
+        </div>
+    </div>
+
+    <nav class="sidebar-nav">
+        <div class="nav-item active" onclick="showSection('overview')" id="nav-overview">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+            </svg>
+            Overview
+        </div>
+        <div class="nav-item" onclick="showSection('projects')" id="nav-projects">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+            </svg>
+            My Projects
+        </div>
+    </nav>
+
+    <div class="sidebar-footer">
+        <button class="btn-logout" onclick="window.location.href='/logout'">Sign Out</button>
+    </div>
+</aside>
+
+<!-- Main -->
+<div class="main">
+    <div class="topbar">
+        <div>
+            <h1 id="pageTitle">Overview</h1>
+            <div class="subtitle" id="pageSubtitle">Your project dashboard</div>
+        </div>
+        <div style="font-size:12px;color:var(--fg-muted);" id="lastUpdated"></div>
+    </div>
+
+    <div class="content" id="mainContent">
+        <div class="loading">Loading your dashboard…</div>
+    </div>
+</div>
+
+<script>
+let currentUser = null;
+let allProjects = [];
+
+// ── Auth ────────────────────────────────────────────────
+async function checkAuth() {
+    try {
+        const r = await fetch('/api/user');
+        if (r.status === 401) { window.location.href = '/login'; return; }
+        currentUser = await r.json();
+        if (currentUser.role !== 'client') { window.location.href = '/dashboard'; return; }
+        document.getElementById('sidebarName').textContent = currentUser.fullName;
+        document.getElementById('sidebarAvatar').textContent = currentUser.fullName.charAt(0).toUpperCase();
+        document.getElementById('lastUpdated').textContent = 'As of ' + new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' });
+        showSection('overview');
+    } catch (e) {
+        window.location.href = '/login';
+    }
+}
+
+// ── Navigation ───────────────────────────────────────────
+function showSection(section) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('nav-' + section).classList.add('active');
+
+    const titles = { overview: 'Overview', projects: 'My Projects' };
+    const subtitles = { overview: 'Summary of all your projects', projects: 'Detailed view with tasks and progress' };
+    document.getElementById('pageTitle').textContent = titles[section];
+    document.getElementById('pageSubtitle').textContent = subtitles[section];
+
+    if (section === 'overview') renderOverview();
+    else if (section === 'projects') renderProjects();
+}
+
+// ── Data helpers ─────────────────────────────────────────
+async function fetchStats() {
+    const r = await fetch('/api/client/dashboard');
+    return r.json();
+}
+
+async function fetchProjects() {
+    const r = await fetch('/api/client/projects');
+    allProjects = await r.json();
+    return allProjects;
+}
+
+async function fetchTasks(projectId) {
+    const r = await fetch(`/api/client/projects/${projectId}/tasks`);
+    return r.json();
+}
+
+// ── Formatters ───────────────────────────────────────────
+function fmtDate(d) {
+    if (!d) return '—';
+    return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+function fmtHours(h) {
+    if (!h && h !== 0) return '—';
+    const hrs = parseFloat(h);
+    if (hrs < 1) return `${Math.round(hrs * 60)}m`;
+    return `${hrs.toFixed(1)}h`;
+}
+function fmtStatus(s) {
+    const m = { not_started: 'Not Started', in_progress: 'In Progress', on_hold: 'On Hold',
+                completed: 'Completed', archived: 'Archived', pending: 'Pending',
+                submitted: 'Submitted', under_review: 'Under Review',
+                revision_requested: 'Revision Req.', cancelled: 'Cancelled' };
+    return m[s] || s;
+}
+
+// ── OVERVIEW SECTION ─────────────────────────────────────
+async function renderOverview() {
+    const el = document.getElementById('mainContent');
+    el.innerHTML = '<div class="loading">Loading…</div>';
+
+    const [stats, projects] = await Promise.all([fetchStats(), fetchProjects()]);
+
+    // Build "Awaiting Response" banner if any project is in client_review
+    const awaitingReview = projects.filter(p => p.status === 'client_review');
+    const reviewBanner = awaitingReview.length ? `
+        <div class="review-banner">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>
+            </svg>
+            <span>⏳ <strong>${awaitingReview.length} project${awaitingReview.length > 1 ? 's are' : ' is'} awaiting your response:</strong>
+            ${awaitingReview.map(p => `<em>${p.project_name}</em>`).join(', ')}.
+            Your timely review helps the team continue on schedule.</span>
+        </div>` : '';
+
+    el.innerHTML = `
+        ${reviewBanner}
+        <!-- Stats -->
+        <div class="stats-grid" style="grid-template-columns:repeat(5,1fr);">
+            ${statCard('<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>', 'Total Projects', stats.total_projects, 'rgba(122,162,247,.15)', 'var(--blue)', 'var(--blue)')}
+            ${statCard('<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>', 'Total Tasks', stats.total_tasks, 'rgba(158,206,106,.15)', 'var(--green)', 'var(--green)')}
+            ${statCard('<polyline points="20 6 9 17 4 12"/>', 'Completed', stats.completed_tasks, 'rgba(115,218,202,.15)', 'var(--cyan)', 'var(--cyan)')}
+            ${statCard('<circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>', 'Overall Progress', stats.overall_progress_percent + '%', 'rgba(187,154,247,.15)', 'var(--purple)', 'var(--purple)')}
+            ${statCard('<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>', 'Review Time', fmtHours(stats.total_client_review_minutes), 'rgba(255,158,100,.15)', 'var(--orange)', 'var(--orange)')}
+        </div>
+
+        <!-- Timeline -->
+        <div class="section-heading">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            Project Timeline
+        </div>
+        ${renderGantt(projects)}
+
+        <!-- Quick stats row -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:24px;">
+            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;">
+                <div style="font-size:11px;color:var(--fg-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;">In Progress</div>
+                <div style="font-size:22px;font-weight:700;color:var(--blue);">${stats.in_progress_tasks}</div>
+                <div style="font-size:12px;color:var(--fg-muted);margin-top:2px;">tasks actively being worked on</div>
+            </div>
+            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;">
+                <div style="font-size:11px;color:var(--fg-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;">Pending Review</div>
+                <div style="font-size:22px;font-weight:700;color:var(--yellow);">${stats.pending_tasks}</div>
+                <div style="font-size:12px;color:var(--fg-muted);margin-top:2px;">tasks pending or awaiting action</div>
+            </div>
+            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;">
+                <div style="font-size:11px;color:var(--fg-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;">Completion Rate</div>
+                <div style="font-size:22px;font-weight:700;color:var(--green);">${stats.overall_progress_percent}%</div>
+                <div style="height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-top:6px;">
+                    <div style="height:100%;width:${stats.overall_progress_percent}%;background:var(--green);border-radius:3px;"></div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function statCard(svgPath, label, value, iconBg, iconColor, borderColor) {
+    return `<div class="stat-card" style="border-left-color:${borderColor};">
+        <div class="stat-icon" style="background:${iconBg};">
+            <svg viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2">${svgPath}</svg>
+        </div>
+        <div>
+            <div class="stat-label">${label}</div>
+            <div class="stat-value">${value}</div>
+        </div>
+    </div>`;
+}
+
+// ── Gantt chart (pure CSS) ───────────────────────────────
+function renderGantt(projects) {
+    if (!projects.length) return '<div class="gantt-wrap"><div class="empty-state">No projects assigned yet.</div></div>';
+
+    // Determine date range across all projects
+    const dates = projects.flatMap(p => [p.start_date, p.due_date].filter(Boolean)).map(d => new Date(d));
+    const today = new Date();
+
+    let minDate = dates.length ? new Date(Math.min(...dates)) : new Date(today.getFullYear(), 0, 1);
+    let maxDate = dates.length ? new Date(Math.max(...dates)) : new Date(today.getFullYear(), 11, 31);
+
+    // Pad by 5% on each side for readability
+    const totalMs = maxDate - minDate || 1;
+    minDate = new Date(minDate.getTime() - totalMs * 0.05);
+    maxDate = new Date(maxDate.getTime() + totalMs * 0.1);
+    const spanMs = maxDate - minDate;
+
+    function pct(date) {
+        if (!date) return 0;
+        return Math.max(0, Math.min(100, ((new Date(date) - minDate) / spanMs) * 100));
+    }
+
+    const todayPct = pct(today);
+
+    // Month labels
+    const months = [];
+    const cur = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+    while (cur <= maxDate) {
+        months.push({ label: cur.toLocaleString('en', { month: 'short', year: '2-digit' }), pct: pct(cur) });
+        cur.setMonth(cur.getMonth() + 1);
+    }
+
+    const monthHeaders = months.map(m =>
+        `<div class="gantt-month" style="position:absolute;left:${m.pct}%;transform:translateX(-50%);">${m.label}</div>`
+    ).join('');
+
+    const rows = projects.map(p => {
+        const left = pct(p.start_date || p.created_at);
+        const right = 100 - pct(p.due_date || p.due_date);
+        const width = Math.max(1, 100 - left - right);
+        const colorClass = 's-' + (p.status || 'not_started');
+        return `
+        <div class="gantt-row">
+            <div class="gantt-label">
+                <div class="p-name" title="${p.project_name}">${p.project_name}</div>
+                <div class="p-code">${p.project_code}</div>
+            </div>
+            <div class="gantt-track">
+                <div class="gantt-today" style="left:${todayPct}%;">
+                    <span class="gantt-today-label">Today</span>
+                </div>
+                <div class="gantt-bar ${colorClass}" style="left:${left}%;width:${width}%;"
+                     title="${p.project_name}: ${fmtDate(p.start_date)} → ${fmtDate(p.due_date)} (${p.progress_percent}%)">
+                    ${width > 8 ? p.progress_percent + '%' : ''}
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+
+    return `
+    <div class="gantt-wrap">
+        <div style="position:relative;height:22px;margin-left:200px;margin-bottom:4px;">
+            ${monthHeaders}
+        </div>
+        ${rows}
+        <div style="margin-top:12px;display:flex;gap:16px;flex-wrap:wrap;">
+            ${['not_started','in_progress','on_hold','completed'].map(s =>
+                `<span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--fg-muted);">
+                    <span style="display:inline-block;width:10px;height:10px;border-radius:2px;" class="s-${s}"></span>
+                    ${fmtStatus(s)}
+                </span>`
+            ).join('')}
+        </div>
+    </div>`;
+}
+
+// ── PROJECTS SECTION ─────────────────────────────────────
+async function renderProjects() {
+    const el = document.getElementById('mainContent');
+    el.innerHTML = '<div class="loading">Loading projects…</div>';
+
+    const projects = await fetchProjects();
+
+    if (!projects.length) {
+        el.innerHTML = `<div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+            </svg>
+            No projects have been assigned to you yet.
+        </div>`;
+        return;
+    }
+
+    el.innerHTML = `
+        <div class="section-heading">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+            </svg>
+            ${projects.length} Project${projects.length !== 1 ? 's' : ''}
+        </div>
+        ${projects.map(p => projectCard(p)).join('')}
+    `;
+
+    // Attach toggle listeners
+    document.querySelectorAll('.project-card-header').forEach(header => {
+        header.addEventListener('click', () => toggleProject(header.dataset.projectId));
+    });
+}
+
+function projectCard(p) {
+    const pct = p.progress_percent || 0;
+    const fillColor = pct >= 100 ? 'var(--green)' : pct >= 60 ? 'var(--blue)' : pct >= 30 ? 'var(--orange)' : 'var(--red)';
+
+    return `
+    <div class="project-card" id="pcard-${p.id}">
+        <div class="project-card-header" data-project-id="${p.id}">
+            <svg class="expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"/>
+            </svg>
+            <span class="code-badge">${p.project_code}</span>
+            <div style="flex:1;min-width:0;">
+                <div class="project-title">${p.project_name}</div>
+                ${p.client_name ? `<div class="project-client">${p.client_name}</div>` : ''}
+            </div>
+            ${p.status === 'client_review'
+                ? `<span class="status-pill sp-client_review">⏳ Awaiting Response</span>`
+                : `<span class="status-pill sp-${p.status}">${fmtStatus(p.status)}</span>`}
+            <span class="priority-pill pp-${p.priority}">${p.priority}</span>
+            <div class="progress-wrap">
+                <div class="progress-track">
+                    <div class="progress-fill" style="width:${pct}%;background:${fillColor};"></div>
+                </div>
+                <span class="progress-pct">${pct}%</span>
+            </div>
+            <div class="meta-item" style="min-width:110px;">
+                📅 <strong>${fmtDate(p.due_date)}</strong>
+            </div>
+            <div class="meta-item" style="min-width:70px;">
+                ⏱ <strong class="hours-badge">${fmtHours(p.total_hours_spent)}</strong>
+            </div>
+            ${p.client_review_minutes > 0 ? `<div class="meta-item" style="min-width:80px;color:var(--orange);">🔄 <strong>${fmtHours(p.client_review_minutes)}</strong> review</div>` : ''}
+            <div class="meta-item">
+                <strong>${p.total_tasks}</strong> task${p.total_tasks !== 1 ? 's' : ''}
+            </div>
+        </div>
+        <div class="project-tasks" id="ptasks-${p.id}">
+            <div class="loading" style="padding:20px 0;">Loading tasks…</div>
+        </div>
+    </div>`;
+}
+
+const loadedProjects = new Set();
+
+async function toggleProject(projectId) {
+    const card = document.getElementById('pcard-' + projectId);
+    const tasksEl = document.getElementById('ptasks-' + projectId);
+    const isOpen = card.classList.contains('open');
+
+    if (isOpen) {
+        card.classList.remove('open');
+        return;
+    }
+
+    card.classList.add('open');
+
+    if (loadedProjects.has(projectId)) return;
+    loadedProjects.add(projectId);
+
+    const tasks = await fetchTasks(projectId);
+    tasksEl.innerHTML = renderTaskTable(tasks);
+}
+
+function renderTaskTable(tasks) {
+    if (!tasks.length) return `<div style="padding:16px 0;color:var(--fg-muted);font-size:13px;">No tasks in this project yet.</div>`;
+
+    const totalMinutes = tasks.reduce((sum, t) => sum + (parseFloat(t.total_time_spent) || 0), 0);
+    const totalIter    = tasks.reduce((sum, t) => sum + (parseInt(t.current_iteration)  || 1), 0);
+
+    const rows = tasks.map(t => {
+        return `<tr>
+            <td style="max-width:240px;">
+                <div style="font-weight:500;color:var(--fg);">${t.task_title}</div>
+                ${t.task_description ? `<div style="font-size:11px;color:var(--fg-muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px;">${t.task_description}</div>` : ''}
+            </td>
+            <td><span class="task-status ts-${t.status}">${fmtStatus(t.status)}</span></td>
+            <td><span style="font-size:12px;">${fmtDate(t.due_date)}</span></td>
+            <td><span class="hours-badge">${fmtHours(t.total_time_spent)}</span></td>
+            <td><span class="iteration-badge">${t.current_iteration || 1}</span></td>
+        </tr>`;
+    }).join('');
+
+    return `
+    <table class="task-table">
+        <thead>
+            <tr>
+                <th>Task</th>
+                <th>Status</th>
+                <th>Due Date</th>
+                <th>Time Spent</th>
+                <th>Iter.</th>
+            </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+        <tfoot>
+            <tr style="border-top:2px solid var(--border);background:rgba(122,162,247,.06);">
+                <td colspan="3" style="padding:8px 12px;font-weight:700;color:var(--fg);font-size:13px;">Total</td>
+                <td style="padding:8px 12px;"><span class="hours-badge" style="font-weight:700;font-size:13px;">${fmtHours(totalMinutes)}</span></td>
+                <td style="padding:8px 12px;"><span class="iteration-badge" style="font-weight:700;font-size:13px;">${totalIter}</span></td>
+            </tr>
+        </tfoot>
+    </table>`;
+}
+
+// ── Boot ─────────────────────────────────────────────────
+checkAuth();
+</script>
+</body>
+</html>
