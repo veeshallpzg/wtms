@@ -2834,6 +2834,8 @@ async function startServer() {
             if (pausedTasks.size > 0) saveDatabase();
         }, 5 * 60 * 1000); // check every 5 minutes
 
+        scheduleDailyBackup();
+
         app.listen(PORT, '0.0.0.0', () => {
             console.log(`WTMS Server running on http://localhost:${PORT}`);
             console.log(`Access via LAN: http://<your-ip>:${PORT}`);
@@ -2842,6 +2844,46 @@ async function startServer() {
         console.error('Failed to start server:', error);
         process.exit(1);
     }
+}
+
+// ── Daily database backup at 7:00 PM ─────────────────────────────────────────
+function scheduleDailyBackup() {
+    const BACKUP_HOUR = 19; // 7 PM
+
+    const BACKUP_DIR = process.env.WTMS_BACKUP_DIR
+        || path.join(process.env.WTMS_DATA_DIR || path.join(__dirname, 'database'), 'BKP');
+
+    const DB_SOURCE = process.env.WTMS_DATA_DIR
+        ? path.join(process.env.WTMS_DATA_DIR, 'wtms.db')
+        : path.join(__dirname, 'database', 'wtms.db');
+
+    function runBackup() {
+        try {
+            if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
+            saveDatabase(); // flush in-memory DB to disk first
+            const dest = path.join(BACKUP_DIR, 'wtms_backup.db');
+            fs.copyFileSync(DB_SOURCE, dest);
+            console.log(`[BACKUP] Database backed up to ${dest}`);
+        } catch (err) {
+            console.error('[BACKUP] Failed:', err.message);
+        }
+    }
+
+    function msUntilNext7PM() {
+        const now = new Date();
+        const next = new Date(now);
+        next.setHours(BACKUP_HOUR, 0, 0, 0);
+        if (next <= now) next.setDate(next.getDate() + 1); // already past 7 PM today
+        return next - now;
+    }
+
+    const delay = msUntilNext7PM();
+    console.log(`[BACKUP] Daily backup scheduled — first run in ${Math.round(delay / 60000)} minutes`);
+
+    setTimeout(() => {
+        runBackup();
+        setInterval(runBackup, 24 * 60 * 60 * 1000); // repeat every 24 hours
+    }, delay);
 }
 
 startServer();

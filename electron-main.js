@@ -5,6 +5,7 @@ const path = require('path');
 const { fork } = require('child_process');
 const http = require('http');
 const fs = require('fs');
+const os = require('os');
 
 // ── Single instance ───────────────────────────────────────────────────────────
 const gotLock = app.requestSingleInstanceLock();
@@ -24,6 +25,7 @@ let serverProcess = null;
 const dataDir = app.getPath('userData');
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 process.env.WTMS_DATA_DIR = dataDir;
+process.env.WTMS_BACKUP_DIR = app.isPackaged ? 'D:\\wtmslocal\\BKP' : path.join(__dirname, 'BKP');
 process.env.TZ = 'Asia/Kolkata';
 
 // ── Server config (server vs client mode) ─────────────────────────────────────
@@ -39,6 +41,19 @@ function loadConfig() {
 
 function saveConfig(cfg) {
     fs.writeFileSync(CONFIG_PATH, JSON.stringify(cfg, null, 2));
+}
+
+// Returns true only when this machine has the server's static IP
+function isServerPC() {
+    const nets = os.networkInterfaces();
+    for (const iface of Object.values(nets)) {
+        for (const entry of iface) {
+            if (!entry.internal && entry.family === 'IPv4' && entry.address === '192.168.29.251') {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 function showSetupWindow() {
@@ -314,10 +329,14 @@ app.whenReady().then(async () => {
     // Register WTMS to start automatically on Windows login
     app.setLoginItemSettings({ openAtLogin: true, openAsHidden: false, name: 'WTMS' });
 
-    // Load config — default new installs to client mode pointing at the central server
+    // Determine mode: server PC is identified by its static LAN IP.
+    // Any other PC is always forced into client mode, even if a stale config says otherwise.
     appConfig = loadConfig();
-    if (!appConfig) {
+    if (!isServerPC()) {
         appConfig = { mode: 'client', serverUrl: 'http://192.168.29.251:8080' };
+        saveConfig(appConfig);
+    } else if (!appConfig) {
+        appConfig = { mode: 'server' };
         saveConfig(appConfig);
     }
 

@@ -71,7 +71,8 @@
       "uninstallerIcon": "assets/icon.ico",
       "license": null,
       "deleteAppDataOnUninstall": false,
-      "runAfterFinish": true
+      "runAfterFinish": true,
+      "include": "assets/installer.nsh"
     }
   }
 }
