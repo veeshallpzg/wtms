@@ -1176,6 +1176,14 @@ app.post('/api/tasks', requireAuth, requireRole(['admin', 'manager']), upload.ar
         return res.status(403).json({ error: 'Access denied' });
     }
 
+    // Block task creation if project is Not Started or Client Review
+    const taskProject = dbGet('SELECT status, project_name FROM projects WHERE id = ?', [project_id]);
+    if (!taskProject) return res.status(404).json({ error: 'Project not found.' });
+    if (taskProject.status === 'not_started' || taskProject.status === 'client_review') {
+        const label = taskProject.status === 'not_started' ? 'Not Started' : 'Client Review';
+        return res.status(400).json({ error: `Cannot add tasks to "${taskProject.project_name}" — project status is "${label}". Change the project status to In Progress first.` });
+    }
+
     // Create task
     const newTaskId = dbInsert(`
         INSERT INTO tasks (project_id, task_title, task_description, assigned_to, assigned_by, priority, estimated_hours, due_date, status, task_category)

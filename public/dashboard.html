@@ -841,6 +841,16 @@
             transition: background .15s;
         }
         .notif-mark-all-btn:hover { background: #1d4ed8; }
+        .notif-open-btn {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 6px 14px; border-radius: 8px;
+            border: 1.5px solid #2563eb; background: transparent;
+            color: #2563eb; font-size: 12px; font-weight: 600;
+            cursor: pointer; transition: background .15s, color .15s;
+            text-decoration: none;
+        }
+        .notif-open-btn:hover { background: #2563eb; color: #fff; }
+        .notif-open-btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; }
         .notif-empty {
             text-align: center; padding: 30px 0; color: #9ca3af;
         }
@@ -854,6 +864,30 @@
         .ntype-task_completed    { background: #f0fdf4; } .ntype-task_completed svg    { stroke: #16a34a; } .ntype-task_completed .notif-type-label { color: #16a34a; }
         .ntype-project_created   { background: #f5f3ff; } .ntype-project_created svg   { stroke: #7c3aed; } .ntype-project_created .notif-type-label { color: #7c3aed; }
         .ntype-file_uploaded     { background: #ecfdf5; } .ntype-file_uploaded svg     { stroke: #0d9488; } .ntype-file_uploaded .notif-type-label { color: #0d9488; }
+
+        /* Search */
+        .search-input {
+            padding: 7px 12px 7px 34px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 13px;
+            outline: none;
+            width: 220px;
+            color: #374151;
+            background: #f9fafb;
+            transition: border-color .2s, background-color .2s;
+        }
+        .search-input:focus { border-color: #7aa2f7; background: #fff; box-shadow: 0 0 0 3px rgba(122,162,247,.12); }
+        .search-input::placeholder { color: #9ca3af; }
+        .search-wrap { position: relative; display: inline-block; }
+        .search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; stroke: #9ca3af; pointer-events: none; }
+
+        /* Sortable column headers */
+        .data-table th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+        .data-table th.sortable:hover { background: #eef2f7; }
+        .data-table th.sortable::after { content: ' ⇅'; font-size: 11px; color: #c0c8d4; }
+        .data-table th.sort-asc::after  { content: ' ↑'; color: #7aa2f7; }
+        .data-table th.sort-desc::after { content: ' ↓'; color: #7aa2f7; }
 
         /* Hidden Sections */
         .section {
@@ -1079,19 +1113,25 @@
             <div class="data-table-container">
                 <div class="data-table-header">
                     <h2>Projects</h2>
-                    <button class="btn btn-add" onclick="showProjectModal()">+ New Project</button>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <div class="search-wrap">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            <input type="text" id="projectSearch" class="search-input" placeholder="Search projects…" oninput="filterProjects(this.value)">
+                        </div>
+                        <button class="btn btn-add" onclick="showProjectModal()">+ New Project</button>
+                    </div>
                 </div>
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>Code</th>
-                            <th>Name</th>
-                            <th>Client</th>
-                            <th>Manager</th>
-                            <th>Status</th>
-                            <th>Priority</th>
-                            <th>Progress</th>
-                            <th>Due Date</th>
+                            <th class="sortable" onclick="sortTable('projectsBody',0,this)">Code</th>
+                            <th class="sortable" onclick="sortTable('projectsBody',1,this)">Name</th>
+                            <th class="sortable" onclick="sortTable('projectsBody',2,this)">Client</th>
+                            <th class="sortable" onclick="sortTable('projectsBody',3,this)">Manager</th>
+                            <th class="sortable" onclick="sortTable('projectsBody',4,this)">Status</th>
+                            <th class="sortable" onclick="sortTable('projectsBody',5,this)">Priority</th>
+                            <th class="sortable" onclick="sortTable('projectsBody',6,this)">Progress</th>
+                            <th class="sortable" onclick="sortTable('projectsBody',7,this)">Due Date</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -1109,19 +1149,25 @@
             <div class="data-table-container">
                 <div class="data-table-header">
                     <h2>Tasks</h2>
-                    <button class="btn btn-add manager-only" id="btnAddTask" onclick="showTaskModal()">+ New Task</button>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <div class="search-wrap">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            <input type="text" id="taskSearch" class="search-input" placeholder="Search tasks…" oninput="filterTasks(this.value)">
+                        </div>
+                        <button class="btn btn-add manager-only" id="btnAddTask" onclick="showTaskModal()">+ New Task</button>
+                    </div>
                 </div>
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>Task</th>
-                            <th>Project</th>
-                            <th>Assigned To</th>
-                            <th>Category</th>
-                            <th>Status</th>
-                            <th>Priority</th>
-                            <th>Iteration</th>
-                            <th>Time</th>
+                            <th class="sortable" onclick="sortTable('tasksBody',0,this)">Task</th>
+                            <th class="sortable" onclick="sortTable('tasksBody',1,this)">Project</th>
+                            <th class="sortable" onclick="sortTable('tasksBody',2,this)">Assigned To</th>
+                            <th class="sortable" onclick="sortTable('tasksBody',3,this)">Category</th>
+                            <th class="sortable" onclick="sortTable('tasksBody',4,this)">Status</th>
+                            <th class="sortable" onclick="sortTable('tasksBody',5,this)">Priority</th>
+                            <th class="sortable" onclick="sortTable('tasksBody',6,this)">Iteration</th>
+                            <th class="sortable" onclick="sortTable('tasksBody',7,this)">Time</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -1794,7 +1840,7 @@
 
     <!-- Project Info Modal (read-only) -->
     <div class="modal" id="projectInfoModal">
-        <div class="modal-content" style="max-width:680px;">
+        <div class="modal-content" style="max-width:900px;">
             <div class="modal-header">
                 <h2 id="projectInfoTitle">Project Details</h2>
                 <button class="modal-close" onclick="closeModal('projectInfoModal')">&times;</button>
@@ -1821,7 +1867,8 @@
                 </div>
                 <div class="form-group">
                     <label>Project *</label>
-                    <select name="project_id" id="taskProjectSelect" required></select>
+                    <select name="project_id" id="taskProjectSelect" required onchange="checkTaskProjectStatus()"></select>
+                    <div id="taskProjectWarning" style="display:none;margin-top:8px;padding:10px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;font-size:13px;color:#b91c1c;font-weight:500;"></div>
                 </div>
                 <div class="form-group" id="taskStatusGroup" style="display:none;">
                     <label>Status</label>
@@ -2326,6 +2373,29 @@
                 if (e.target === document.getElementById('notifOverlay')) closeNotifModal();
             });
             loadNotifications(true);
+
+            // Poll every 30 seconds; auto-pop modal when new unread notifications arrive
+            let _lastUnreadCount = 0;
+            setInterval(async () => {
+                try {
+                    const r = await fetch('/api/notifications');
+                    const all = await r.json();
+                    const unread = all.filter(n => !n.is_read).length;
+                    const badge  = document.getElementById('notificationBadge');
+                    badge.textContent = unread;
+                    badge.classList.toggle('show', unread > 0);
+                    // Auto-pop only when count increases and modal is not already open
+                    if (unread > _lastUnreadCount && !document.getElementById('notifOverlay').classList.contains('show')) {
+                        _notifAll       = all;
+                        _notifModalList = all.filter(n => !n.is_read);
+                        _notifIndex     = 0;
+                        renderNotifModal();
+                        document.getElementById('notifOverlay').classList.add('show');
+                    }
+                    _lastUnreadCount = unread;
+                    _notifAll = all;
+                } catch (e) { /* silently fail */ }
+            }, 30000);
         }
 
         // Load + refresh badge; autoPopup=true shows modal for unread on login
@@ -2394,6 +2464,7 @@
             const n    = list[_notifIndex];
             const meta = NOTIF_META[n.type] || NOTIF_META.task_assigned;
 
+            const canOpen = n.reference_type === 'task' || n.reference_type === 'project';
             body.innerHTML = `
                 <div class="notif-type-row ntype-${n.type}">
                     <div class="notif-type-icon ntype-${n.type}">
@@ -2409,7 +2480,11 @@
                         <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
                     </svg>
                     ${formatDateTime(n.created_at)}
-                </div>`;
+                </div>
+                ${canOpen ? `<button class="notif-open-btn" onclick="openNotifReference(${n.id})">
+                    <svg viewBox="0 0 24 24" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    Open ${n.reference_type === 'task' ? 'Task' : 'Project'}
+                </button>` : ''}`;
 
             document.getElementById('notifCounter').textContent = `${_notifIndex + 1} / ${total}`;
             document.getElementById('notifPrev').disabled = _notifIndex === 0;
@@ -2450,6 +2525,25 @@
             const badge = document.getElementById('notificationBadge');
             badge.textContent = 0;
             badge.classList.remove('show');
+        }
+
+        // Open the task or project referenced by a notification
+        async function openNotifReference(notifId) {
+            const n = _notifAll.find(x => x.id === notifId);
+            if (!n) return;
+            // Mark as read silently
+            if (!n.is_read) {
+                await fetch(`/api/notifications/${n.id}/read`, { method: 'PUT' });
+                n.is_read = 1;
+                const orig = _notifModalList.find(x => x.id === n.id);
+                if (orig) orig.is_read = 1;
+            }
+            closeNotifModal();
+            if (n.reference_type === 'task') {
+                viewTask(n.reference_id);
+            } else if (n.reference_type === 'project') {
+                viewProjectInfo(n.reference_id);
+            }
         }
 
         // Format date + time helper
@@ -2911,6 +3005,8 @@
 
         // Load projects
         async function loadProjects() {
+            const el = document.getElementById('projectSearch');
+            if (el) el.value = '';
             const response = await fetch('/api/projects');
             const projects = await response.json();
 
@@ -2928,7 +3024,7 @@
                     </td>
                     <td>${project.client_name || '-'}</td>
                     <td title="${project.all_managers_display || project.manager_name}">${project.all_managers_display || project.manager_name}</td>
-                    <td>
+                    <td data-sort="${{not_started:1,in_progress:2,on_hold:3,client_review:4,completed:5,archived:6}[project.status]||9}">
                         ${(currentUser.role === 'admin' || currentUser.role === 'manager') ? `
                         <select class="status-badge status-sel status-${project.status}"
                                 onchange="changeProjectStatus(${project.id}, this)"
@@ -2941,8 +3037,8 @@
                             <option value="archived"      ${project.status==='archived'      ?'selected':''}>Archived</option>
                         </select>` : `<span class="status-badge status-${project.status}">${formatStatus(project.status)}</span>`}
                     </td>
-                    <td><span class="priority-badge priority-${project.priority}">${project.priority}</span></td>
-                    <td>
+                    <td data-sort="${{critical:1,high:2,medium:3,low:4}[project.priority]||9}"><span class="priority-badge priority-${project.priority}">${project.priority}</span></td>
+                    <td data-sort="${project.progress_percent||0}">
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <div style="flex: 1; background: #e5e7eb; height: 8px; border-radius: 4px; overflow: hidden; min-width: 60px;">
                                 <div style="background: #10b981; height: 100%; width: ${project.progress_percent || 0}%;"></div>
@@ -2950,7 +3046,7 @@
                             <span style="font-size: 12px; white-space: nowrap;">${project.progress_percent || 0}%</span>
                         </div>
                     </td>
-                    <td>${formatDueDate(project.due_date, project.status)}</td>
+                    <td data-sort="${project.due_date||''}">${formatDueDate(project.due_date, project.status)}</td>
                     <td>
                         <button class="action-btn action-btn-view" onclick="showProjectFiles(${project.id}, '${project.project_name.replace(/'/g, "\\'")}')">Files</button>
                         <button class="action-btn action-btn-view" onclick="viewProject(${project.id})">Tasks</button>
@@ -2968,6 +3064,8 @@
 
         // Load tasks
         async function loadTasks() {
+            const el = document.getElementById('taskSearch');
+            if (el) el.value = '';
             const response = await fetch('/api/tasks');
             const tasks = await response.json();
 
@@ -2983,10 +3081,10 @@
                     <td>${task.project_name}</td>
                     <td>${task.assigned_to_name}</td>
                     <td><span class="category-badge cat-${task.task_category || 'project_requirement'}">${task.task_category === 'client_request' ? 'Client' : 'Internal'}</span></td>
-                    <td><span class="status-badge status-${task.status}">${formatStatus(task.status)}</span></td>
-                    <td><span class="priority-badge priority-${task.priority}">${task.priority}</span></td>
-                    <td>#${task.current_iteration}</td>
-                    <td>${formatTime(task.total_time_spent)}</td>
+                    <td data-sort="${{in_progress:1,pending:2,paused:3,revision_requested:4,submitted:5,under_review:6,not_started:7,on_hold:8,completed:9,cancelled:10}[task.status]||11}"><span class="status-badge status-${task.status}">${formatStatus(task.status)}</span></td>
+                    <td data-sort="${{critical:1,high:2,medium:3,low:4}[task.priority]||9}"><span class="priority-badge priority-${task.priority}">${task.priority}</span></td>
+                    <td data-sort="${task.current_iteration||0}">#${task.current_iteration}</td>
+                    <td data-sort="${task.total_time_spent||0}">${formatTime(task.total_time_spent)}</td>
                     <td>
                         <button class="action-btn action-btn-view" onclick="viewTask(${task.id})">View</button>
                         ${(() => { const locked = task.project_status === 'client_review'; const isWorker = currentUser.role === 'member' || (currentUser.role === 'manager' && task.assigned_to === currentUser.id); if (!isWorker) return ''; if (locked && (task.status === 'pending' || task.status === 'revision_requested' || task.status === 'paused')) return `<span title="Awaiting client response — timers are paused" style="display:inline-flex;align-items:center;gap:4px;padding:4px 8px;background:#fef3c7;color:#92400e;border:1px solid #fde68a;border-radius:6px;font-size:11px;font-weight:600;">🔒 Client Review</span>`; if (task.status === 'pending' || task.status === 'revision_requested') return `<button class="action-btn action-btn-edit" onclick="startTaskTimer(${task.id})">Start</button>`; if (task.status === 'in_progress') return `<button class="action-btn" style="background:#fff7ed;color:#c2410c;border:1px solid rgba(194,65,12,.2);" onclick="showPauseModal(${task.id})">Pause</button><button class="action-btn action-btn-edit" onclick="showSubmitModal(${task.id})">Submit</button>`; if (task.status === 'paused') return `<button class="action-btn" style="background:#f0fdf4;color:#15803d;border:1px solid rgba(21,128,61,.2);" onclick="resumeTaskTimer(${task.id})">▶ Resume</button><button class="action-btn action-btn-edit" onclick="showSubmitModal(${task.id})">Submit</button>`; return ''; })()}
@@ -3710,9 +3808,106 @@
                 html += `</div>`;
             }
 
+            // ── Fetch tasks for this project ──────────────────────────────
+            const [tasksResp, detailResp] = await Promise.all([
+                fetch(`/api/projects/${projectId}/tasks`),
+                (currentUser.role === 'admin' || currentUser.role === 'manager')
+                    ? fetch(`/api/reports/project-detail/${projectId}`)
+                    : Promise.resolve(null)
+            ]);
+            const tasks = await tasksResp.json();
+            const detail = (detailResp && detailResp.ok) ? await detailResp.json() : null;
+
+            // ── Team members section ──────────────────────────────────────
+            const managerNames = (p.all_managers_display || p.manager_name || '').split(',').map(s => s.trim()).filter(Boolean);
+            const memberMap = new Map();
+            tasks.forEach(t => {
+                if (!memberMap.has(t.assigned_to)) memberMap.set(t.assigned_to, { name: t.assigned_to_name, count: 0 });
+                memberMap.get(t.assigned_to).count++;
+            });
+
+            html += `<div style="border-top:2px solid #f1f5f9;margin-top:18px;padding-top:16px;">
+                <h4 style="font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.8px;margin:0 0 12px;">Team</h4>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px;">`;
+            managerNames.forEach(name => {
+                html += `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:20px;font-size:12px;font-weight:600;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0112 0v2"/></svg>
+                    ${name} <span style="font-size:10px;opacity:.7;margin-left:2px;">Manager</span></span>`;
+            });
+            memberMap.forEach((m, id) => {
+                const isAlsoManager = managerNames.some(n => n.toLowerCase() === m.name.toLowerCase());
+                if (!isAlsoManager) {
+                    html += `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;border-radius:20px;font-size:12px;font-weight:600;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0112 0v2"/></svg>
+                        ${m.name} <span style="font-size:10px;opacity:.7;margin-left:2px;">${m.count} task${m.count !== 1 ? 's' : ''}</span></span>`;
+                }
+            });
+            if (managerNames.length === 0 && memberMap.size === 0) html += `<span style="color:#9ca3af;font-size:13px;">No team assigned yet</span>`;
+            html += `</div></div>`;
+
+            // ── Tasks breakdown section ───────────────────────────────────
+            html += `<div style="border-top:2px solid #f1f5f9;margin-top:18px;padding-top:16px;">
+                <h4 style="font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.8px;margin:0 0 12px;">
+                    Tasks <span style="font-size:11px;font-weight:600;background:#f1f5f9;color:#374151;padding:2px 8px;border-radius:10px;margin-left:6px;">${tasks.length}</span>
+                </h4>`;
+
+            if (tasks.length === 0) {
+                html += `<div style="text-align:center;padding:24px;color:#9ca3af;font-size:13px;">No tasks found for this project</div>`;
+            } else {
+                // Build a time map from detail report if available
+                const timeMap = {};
+                if (detail && detail.member_efforts) {
+                    detail.member_efforts.forEach(e => { timeMap[e.task_id] = e.total_minutes || 0; });
+                }
+
+                html += `<div style="overflow-x:auto;">
+                    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                        <thead>
+                            <tr style="background:#f8fafc;border-bottom:2px solid #e5e7eb;">
+                                <th style="padding:9px 12px;text-align:left;font-weight:600;color:#374151;white-space:nowrap;">Task</th>
+                                <th style="padding:9px 12px;text-align:left;font-weight:600;color:#374151;white-space:nowrap;">Assigned To</th>
+                                <th style="padding:9px 12px;text-align:left;font-weight:600;color:#374151;white-space:nowrap;">Status</th>
+                                <th style="padding:9px 12px;text-align:left;font-weight:600;color:#374151;white-space:nowrap;">Priority</th>
+                                <th style="padding:9px 12px;text-align:left;font-weight:600;color:#374151;white-space:nowrap;">Time</th>
+                                <th style="padding:9px 12px;text-align:left;font-weight:600;color:#374151;white-space:nowrap;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+
+                tasks.forEach(t => {
+                    const timeMins = timeMap[t.id] !== undefined ? timeMap[t.id] : (t.total_time_spent || 0);
+                    const isWorker = currentUser.role === 'member' || (currentUser.role === 'manager' && t.assigned_to === currentUser.id);
+                    const locked   = t.project_status === 'client_review';
+
+                    let actions = `<button class="action-btn action-btn-view" onclick="viewTask(${t.id})">View</button>`;
+                    if (isWorker && !locked) {
+                        if (t.status === 'pending' || t.status === 'revision_requested')
+                            actions += `<button class="action-btn action-btn-edit" onclick="startTaskTimer(${t.id})">Start</button>`;
+                        else if (t.status === 'paused')
+                            actions += `<button class="action-btn" style="background:#f0fdf4;color:#15803d;border:1px solid rgba(21,128,61,.2);" onclick="resumeTaskTimer(${t.id})">▶ Resume</button>`;
+                    }
+                    if ((currentUser.role === 'admin' || currentUser.role === 'manager') && t.status === 'submitted')
+                        actions += `<button class="action-btn action-btn-edit" onclick="showReviewModal(${t.id})">Review</button>`;
+                    if ((currentUser.role === 'admin' || currentUser.role === 'manager') && t.status !== 'cancelled')
+                        actions += `<button class="action-btn action-btn-edit" onclick="closeModal('projectInfoModal');editTask(${t.id})">Edit</button>`;
+
+                    html += `<tr style="border-bottom:1px solid #f1f5f9;">
+                        <td style="padding:9px 12px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${t.task_title}">${t.task_title}</td>
+                        <td style="padding:9px 12px;white-space:nowrap;">${t.assigned_to_name}</td>
+                        <td style="padding:9px 12px;"><span class="status-badge status-${t.status}">${formatStatus(t.status)}</span></td>
+                        <td style="padding:9px 12px;"><span class="priority-badge priority-${t.priority}">${t.priority}</span></td>
+                        <td style="padding:9px 12px;white-space:nowrap;font-variant-numeric:tabular-nums;">${formatTime(timeMins)}</td>
+                        <td style="padding:9px 12px;white-space:nowrap;">${actions}</td>
+                    </tr>`;
+                });
+
+                html += `</tbody></table></div>`;
+            }
+            html += `</div>`;
+
+            // ── Render and show modal ─────────────────────────────────────
             document.getElementById('projectInfoContent').innerHTML = html;
 
-            // Show Edit button only for admin/manager
             const editBtn = document.getElementById('projectInfoEditBtn');
             if (currentUser.role === 'admin' || currentUser.role === 'manager') {
                 editBtn.innerHTML = `<button class="btn btn-primary" onclick="closeModal('projectInfoModal'); editProject(${projectId});">Edit Project</button>`;
@@ -3721,6 +3916,60 @@
             }
 
             document.getElementById('projectInfoModal').classList.add('show');
+        }
+
+        // ── Search / filter helpers ───────────────────────────────────────
+        function filterProjects(query) {
+            const q = query.toLowerCase().trim();
+            document.querySelectorAll('#projectsBody tr').forEach(row => {
+                row.style.display = (!q || row.textContent.toLowerCase().includes(q)) ? '' : 'none';
+            });
+        }
+
+        function filterTasks(query) {
+            const q = query.toLowerCase().trim();
+            document.querySelectorAll('#tasksBody tr').forEach(row => {
+                row.style.display = (!q || row.textContent.toLowerCase().includes(q)) ? '' : 'none';
+            });
+        }
+
+        // ── Column sort ───────────────────────────────────────────────────
+        const _sortState = {};
+
+        function sortTable(tbodyId, colIndex, thEl) {
+            const tbody = document.getElementById(tbodyId);
+            if (!tbody) return;
+
+            const prev = _sortState[tbodyId] || {};
+            const dir  = (prev.col === colIndex && prev.dir === 'asc') ? 'desc' : 'asc';
+            _sortState[tbodyId] = { col: colIndex, dir };
+
+            // Update header indicators
+            const allThs = thEl.closest('thead').querySelectorAll('th');
+            allThs.forEach(th => th.classList.remove('sort-asc', 'sort-desc'));
+            thEl.classList.add(dir === 'asc' ? 'sort-asc' : 'sort-desc');
+
+            // Sort all rows (including hidden ones so search + sort compose correctly)
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            rows.sort((a, b) => {
+                const aCell = a.cells[colIndex];
+                const bCell = b.cells[colIndex];
+                if (!aCell || !bCell) return 0;
+
+                // Prefer explicit data-sort value; fall back to visible text
+                const aRaw = aCell.dataset.sort !== undefined ? aCell.dataset.sort : aCell.textContent.trim();
+                const bRaw = bCell.dataset.sort !== undefined ? bCell.dataset.sort : bCell.textContent.trim();
+
+                const aNum = parseFloat(aRaw);
+                const bNum = parseFloat(bRaw);
+                let cmp = (!isNaN(aNum) && !isNaN(bNum))
+                    ? aNum - bNum
+                    : aRaw.localeCompare(bRaw, undefined, { sensitivity: 'base', numeric: true });
+
+                return dir === 'asc' ? cmp : -cmp;
+            });
+
+            rows.forEach(row => tbody.appendChild(row));
         }
 
         // Load tasks filtered by a specific project
@@ -4090,8 +4339,32 @@
             const projects = await response.json();
 
             document.getElementById('taskProjectSelect').innerHTML = projects.map(p =>
-                `<option value="${p.id}">${p.project_name}</option>`
+                `<option value="${p.id}" data-status="${p.status}">${p.project_name}</option>`
             ).join('');
+            checkTaskProjectStatus();
+        }
+
+        function checkTaskProjectStatus() {
+            // Only enforce on new task creation, not edit (edit has disabled select)
+            const isEdit = !!document.getElementById('editTaskId').value;
+            const warning = document.getElementById('taskProjectWarning');
+            const saveBtn = document.getElementById('taskSaveBtn');
+            if (isEdit) { warning.style.display = 'none'; saveBtn.disabled = false; return; }
+
+            const sel = document.getElementById('taskProjectSelect');
+            const opt = sel.options[sel.selectedIndex];
+            const status = opt ? opt.dataset.status : '';
+            const blocked = status === 'not_started' || status === 'client_review';
+
+            if (blocked) {
+                const label = status === 'not_started' ? 'Not Started' : 'Client Review';
+                warning.textContent = `⚠️ Tasks cannot be added — this project is "${label}". Change the project status to In Progress first.`;
+                warning.style.display = '';
+                saveBtn.disabled = true;
+            } else {
+                warning.style.display = 'none';
+                saveBtn.disabled = false;
+            }
         }
 
         // Close modal
